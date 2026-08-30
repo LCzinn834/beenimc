@@ -8,13 +8,21 @@ export type Data = { categories: Category[]; textures: Texture[] };
 
 const initial: Data = { categories: [{ id: "seeds", name: "Seeds" }], textures: [] };
 const file = path.join(process.cwd(), "data.json");
-const hasDatabase = Boolean(process.env.DATABASE_URL);
+// DATABASE_URL é usado localmente/Neon. As alternativas permitem usar uma
+// integração Postgres conectada diretamente no painel da Vercel.
+const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
+const hasDatabase = Boolean(databaseUrl);
 let schema: Promise<void> | undefined;
 
-async function localDb() { return JSONFilePreset<Data>(file, initial); }
+async function localDb() {
+  if (process.env.VERCEL) {
+    throw new Error("Configure DATABASE_URL (ou POSTGRES_URL) na Vercel. O arquivo data.json não é persistente em funções serverless.");
+  }
+  return JSONFilePreset<Data>(file, initial);
+}
 async function sql() {
-  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL não configurada");
-  return neon(process.env.DATABASE_URL);
+  if (!databaseUrl) throw new Error("Banco de dados não configurado");
+  return neon(databaseUrl);
 }
 async function ensureSchema() {
   if (!hasDatabase) return;
