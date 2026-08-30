@@ -1,0 +1,4 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+@layer base { * { @apply border-slate-200; } body { @apply bg-[#f6faff] text-slate-950 antialiased; } }
+::selection { background:#9dd7ff; color:#082f49; }
+.glass { background:linear-gradient(135deg,rgba(255,255,255,.88),rgba(222,242,255,.6)); backdrop-filter:blur(18px); border:1px solid rgba(148,205,255,.45); box-shadow:0 18px 50px rgba(14,116,144,.12); }

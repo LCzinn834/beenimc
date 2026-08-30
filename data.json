@@ -1,0 +1,65 @@
+{
+  "categories": [],
+  "textures": [
+    {
+      "id": "16695a91-bbf9-43f1-860c-39b349ac64db",
+      "title": "teste",
+      "description": "aaaa",
+      "version": "1.12",
+      "categoryId": "seeds",
+      "imageUrl": "",
+      "downloadUrl": "",
+      "createdAt": "2026-08-30T00:00:54.861Z"
+    },
+    {
+      "id": "05ab7cc7-b5c9-4916-9f10-3d9b09422efe",
+      "title": "teste",
+      "description": "aaaa",
+      "version": "1.12",
+      "categoryId": "seeds",
+      "imageUrl": "",
+      "downloadUrl": "",
+      "createdAt": "2026-08-30T00:00:54.404Z"
+    },
+    {
+      "id": "d67280d8-1e46-4f8c-a0f4-c7db7d996515",
+      "title": "teste",
+      "description": "aaaa",
+      "version": "1.12",
+      "categoryId": "seeds",
+      "imageUrl": "",
+      "downloadUrl": "",
+      "createdAt": "2026-08-30T00:00:46.826Z"
+    },
+    {
+      "id": "be8b90d3-c17a-4935-97d6-debed0fd0d2c",
+      "title": "teste",
+      "description": "aaaa",
+      "version": "1.12",
+      "categoryId": "seeds",
+      "imageUrl": "",
+      "downloadUrl": "",
+      "createdAt": "2026-08-30T00:00:46.627Z"
+    },
+    {
+      "id": "63ce0ffd-cf6e-49f3-8849-466c3c9e35cf",
+      "title": "teste",
+      "description": "aaaa",
+      "version": "1.12",
+      "categoryId": "seeds",
+      "imageUrl": "",
+      "downloadUrl": "",
+      "createdAt": "2026-08-30T00:00:45.384Z"
+    },
+    {
+      "id": "7bc9d825-189d-4355-bf74-ce741f02b4c5",
+      "title": "teste",
+      "description": "aaaa",
+      "version": "1.12",
+      "categoryId": "seeds",
+      "imageUrl": "",
+      "downloadUrl": "",
+      "createdAt": "2026-08-30T00:00:45.202Z"
+    }
+  ]
+}
