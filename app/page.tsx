@@ -9,7 +9,38 @@ import type { Data } from "@/lib/store";
 export default function Home() {
   const [data, setData] = useState<Data>({ categories: [], textures: [] });
   const [category, setCategory] = useState("all"); const [query, setQuery] = useState(""); const [version, setVersion] = useState("all"); const [nav, setNav] = useState("inicio");
-  useEffect(() => { fetch("/api/data").then(r => r.json()).then(setData); }, []);
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const response = await fetch("/api/data", { cache: "no-store" });
+        if (!response.ok) return;
+        const nextData: Data = await response.json();
+        if (active) setData(nextData);
+      } catch {
+        // Mantém os últimos dados visíveis caso a conexão falhe temporariamente.
+      }
+    };
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    const refreshAfterAdminUpdate = (event: StorageEvent) => {
+      if (event.key === "beenimc-data-updated") load();
+    };
+
+    load();
+    window.addEventListener("focus", load);
+    window.addEventListener("storage", refreshAfterAdminUpdate);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    const interval = window.setInterval(load, 15_000);
+    return () => {
+      active = false;
+      window.removeEventListener("focus", load);
+      window.removeEventListener("storage", refreshAfterAdminUpdate);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.clearInterval(interval);
+    };
+  }, []);
   useEffect(() => { document.getElementById(nav)?.scrollIntoView({ behavior: "smooth" }); }, [nav]);
   const versions = Array.from(new Set(data.textures.map(texture => texture.version)));
   const textures = useMemo(() => data.textures.filter(texture => (category === "all" || texture.categoryId === category) && (version === "all" || texture.version === version) && (`${texture.title} ${texture.description}`).toLowerCase().includes(query.toLowerCase())), [data, category, version, query]);
