@@ -15,7 +15,7 @@ const hasDatabase = Boolean(databaseUrl);
 let schema: Promise<void> | undefined;
 
 async function localDb() {
-  if (process.env.VERCEL) {
+  if (process.env.NODE_ENV === "production") {
     throw new Error("Configure DATABASE_URL (ou POSTGRES_URL) na Vercel. O arquivo data.json não é persistente em funções serverless.");
   }
   return JSONFilePreset<Data>(file, initial);
