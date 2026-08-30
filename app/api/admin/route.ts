@@ -1,2 +1,40 @@
-import { db } from "@/lib/store"; import { mkdir,writeFile } from "fs/promises"; import path from "path"; import { randomUUID } from "crypto";
-export async function POST(req:Request){const f=await req.formData();if(f.get("code")!==process.env.ADMIN_CODE)return Response.json({error:"Não autorizado"},{status:401});const d=await db(),action=String(f.get("action"));let result:any={};if(action==="category"){const id=randomUUID();d.data.categories.push({id,name:String(f.get("name"))});result={id}}if(action==="rename-category"){const x=d.data.categories.find(x=>x.id===f.get("id"));if(x)x.name=String(f.get("name"))}if(action==="delete-category"){const id=String(f.get("id"));d.data.categories=d.data.categories.filter(x=>x.id!==id);d.data.textures=d.data.textures.filter(x=>x.categoryId!==id)}if(action==="texture"){const save=async(key:string)=>{const v=f.get(key);if(v instanceof File&&v.size){await mkdir(path.join(process.cwd(),"public/uploads"),{recursive:true});const name=`${randomUUID()}-${v.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`;await writeFile(path.join(process.cwd(),"public/uploads",name),Buffer.from(await v.arrayBuffer()));return `/uploads/${name}`}return String(f.get(`${key}Url`)||"")};const id=String(f.get("id")||randomUUID()),imageUrl=await save("image"),downloadUrl=await save("download"),old=d.data.textures.find(x=>x.id===id);const item={id,title:String(f.get("title")),description:String(f.get("description")),version:String(f.get("version")),categoryId:String(f.get("categoryId")),imageUrl:imageUrl||old?.imageUrl||"",downloadUrl:downloadUrl||old?.downloadUrl||"",createdAt:old?.createdAt||new Date().toISOString()};d.data.textures=old?d.data.textures.map(x=>x.id===id?item:x):[item,...d.data.textures];result=item}if(action==="delete-texture")d.data.textures=d.data.textures.filter(x=>x.id!==f.get("id"));await d.write();return Response.json({ok:true,...result})}
+import { put } from "@vercel/blob";
+import { randomUUID } from "crypto";
+import { addCategory, deleteCategory, deleteTexture, getData, saveTexture, type Texture } from "@/lib/store";
+
+function text(form: FormData, name: string) { return String(form.get(name) || "").trim(); }
+async function saveFile(form: FormData, key: "image" | "download") {
+  const file = form.get(key);
+  if (!(file instanceof File) || !file.size) return text(form, `${key}Url`);
+  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error("BLOB_READ_WRITE_TOKEN não configurado");
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const blob = await put(`${key}s/${randomUUID()}-${safeName}`, file, { access: "public", addRandomSuffix: true, contentType: file.type || undefined });
+  return blob.url;
+}
+
+export async function POST(request: Request) {
+  const form = await request.formData();
+  if (text(form, "code") !== process.env.ADMIN_CODE) return Response.json({ error: "Não autorizado" }, { status: 401 });
+  try {
+    const action = text(form, "action");
+    if (action === "category") {
+      const name = text(form, "name");
+      if (!name) return Response.json({ error: "Informe o nome da aba." }, { status: 400 });
+      await addCategory({ id: randomUUID(), name });
+    }
+    if (action === "delete-category") await deleteCategory(text(form, "id"));
+    if (action === "delete-texture") await deleteTexture(text(form, "id"));
+    if (action === "texture") {
+      const id = text(form, "id") || randomUUID();
+      const current = (await getData()).textures.find(texture => texture.id === id);
+      const [imageUrl, downloadUrl] = await Promise.all([saveFile(form, "image"), saveFile(form, "download")]);
+      const texture: Texture = { id, title: text(form, "title"), description: text(form, "description"), version: text(form, "version"), categoryId: text(form, "categoryId"), imageUrl: imageUrl || current?.imageUrl || "", downloadUrl: downloadUrl || current?.downloadUrl || "", createdAt: current?.createdAt || new Date().toISOString() };
+      if (!texture.title || !texture.description || !texture.version || !texture.categoryId) return Response.json({ error: "Preencha todos os campos obrigatórios." }, { status: 400 });
+      await saveTexture(texture);
+    }
+    return Response.json({ ok: true });
+  } catch (error) {
+    console.error(error);
+    return Response.json({ error: error instanceof Error ? error.message : "Erro ao salvar." }, { status: 500 });
+  }
+}
